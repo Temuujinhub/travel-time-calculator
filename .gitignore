@@ -25,6 +25,7 @@ MANIFEST
 venv/
 env/
 ENV/
+test_venv/
 
 # IDE
 .vscode/

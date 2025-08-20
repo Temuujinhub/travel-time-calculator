@@ -6,7 +6,7 @@ import os
 travel_bp = Blueprint('travel', __name__)
 
 # Google Maps API key - In production, this should be in environment variables
-GOOGLE_MAPS_API_KEY = "AIzaSyD_RxGFjYwvqoDIq17ZMhdLcChy0tTTrnU"
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', "AIzaSyD_RxGFjYwvqoDIq17ZMhdLcChy0tTTrnU")
 
 @travel_bp.route('/calculate-travel-time', methods=['POST'])
 def calculate_travel_time():
