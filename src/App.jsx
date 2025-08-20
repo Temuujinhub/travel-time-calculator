@@ -305,9 +305,9 @@ function App() {
       setResults({
         success: true,
         locations: {
-          home: homeLocation,
-          school: schoolLocation,
-          work: workLocation
+          home: locations.home,
+          school: locations.school,
+          work: locations.work
         },
         travel_times,
         traffic_data: {
