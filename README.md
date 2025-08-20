@@ -1,102 +1,199 @@
 # Зорчих цагийн тооцоолуур - Travel Time Calculator
 
-Гэр, ажил, сургуулийн байршлыг оруулж, өдөр тутмын зорчих цаг болон цаг алдалтыг тооцоолдог веб систем.
+Гэр, сургууль, ажлын хооронд зорчих цагийг тооцоолж, цаг алдалтыг харуулдаг веб систем. Google Maps API ашиглан бодит зорчих цагийг тооцоолж, Google Sheets-д автоматаар хадгалдаг.
 
-## Онцлогууд
+## 🌟 Онцлогууд
 
-- 🏠 Гэр, ажил, сургуулийн байршил оруулах
-- 🚗 Зорчих цагийн тооцоолол
-- 📊 Өдөр, сар, жилийн цаг алдалтын статистик
-- 💾 Байршлыг хадгалах функц
-- 📱 Responsive дизайн (компьютер болон утсанд тохирсон)
+- 🏠 **Байршил оруулах:** Гэр, сургууль, ажлын байршлыг Google Maps-аас хайж сонгох
+- 🚗 **Бодит зорчих цаг:** Google Distance Matrix API ашиглан бодит зорчих цагийг тооцоолох
+- 📊 **Цаг алдалтын статистик:** Өдөр, сар, жилийн цаг алдалтыг харуулах
+- 🇲🇳 **Монгол хэв маяг:** Гэр → Сургууль → Ажил → Гэр дарааллаар тооцоолох
+- 📈 **Google Sheets интеграци:** Тооцооллын түүхийг автоматаар хадгалах
+- 📱 **Responsive дизайн:** Компьютер болон утсанд тохирсон
 
-## Технологи
+## 🛠 Технологи
 
 ### Frontend
-- React 18
-- Tailwind CSS
-- Shadcn/ui компонентууд
-- Lucide иконууд
+- **React 18** - Modern UI framework
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn/ui** - High-quality UI components
+- **Lucide Icons** - Beautiful icons
 
 ### Backend
-- Flask (Python)
-- SQLite өгөгдлийн сан
-- RESTful API
+- **Flask** - Python web framework
+- **Google Maps APIs:**
+  - Distance Matrix API - Зорчих цаг тооцоолох
+  - Places API - Байршил хайх
+  - Maps JavaScript API - Газрын зураг харуулах
+- **Google Sheets API** - OAuth 2.0 ашиглан өгөгдөл хадгалах
 
-## Суулгах заавар
+## 🚀 Суулгах заавар
 
-### Шаардлага
-- Python 3.11+
-- Node.js 20+
-- npm эсвэл pnpm
+### 1. Repository clone хийх
 
-### Локал дээр ажиллуулах
-
-1. Репозиторийг татах:
 ```bash
-git clone <repository-url>
-cd travel-time-backend
+git clone https://github.com/Temuujinhub/travel-time-calculator.git
+cd travel-time-calculator
 ```
 
-2. Python виртуал орчин үүсгэх:
+### 2. Backend тохиргоо
+
 ```bash
+# Virtual environment үүсгэх
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # эсвэл
 venv\Scripts\activate  # Windows
-```
 
-3. Python dependencies суулгах:
-```bash
+# Dependencies суулгах
 pip install -r requirements.txt
 ```
 
-4. Flask серверийг эхлүүлэх:
+### 3. Google APIs тохиргоо
+
+#### Google Maps API
+1. [Google Cloud Console](https://console.cloud.google.com/) руу нэвтрэх
+2. Шинэ project үүсгэх эсвэл одоо байгаагаа сонгох
+3. Дараах API-удыг идэвхжүүлэх:
+   - Maps JavaScript API
+   - Places API
+   - Distance Matrix API
+4. API key үүсгэх:
+   - **Application restrictions:** HTTP referrers
+   - **Website restrictions:** Таны domain нэмэх
+   - **API restrictions:** Дээрх 3 API-г сонгох
+
+#### Google Sheets API
+1. Google Cloud Console дээр Google Sheets API идэвхжүүлэх
+2. OAuth 2.0 Client ID үүсгэх:
+   - **Application type:** Web application
+   - **Authorized redirect URIs:** `http://localhost:5000/api/oauth2callback`
+3. Client secret JSON файлыг татаж авах
+4. `src/config/client_secret.json` байршилд хадгалах
+
+### 4. Environment variables
+
+`src/routes/travel.py` файлд API key-г оруулах:
+```python
+GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"
+```
+
+### 5. Ажиллуулах
+
 ```bash
-python src/main.py
+# Backend ажиллуулах
+cd src
+python main.py
+
+# Frontend build хийх (өөр terminal дээр)
+cd ../frontend
+npm install
+npm run build
+cp -r dist/* ../src/static/
 ```
 
-Серверийг http://localhost:5000 дээр нээнэ.
+Веб хөтчөөр `http://localhost:5000` руу орох.
 
-## API Endpoints
+## 📖 Ашиглах заавар
 
-### POST /api/calculate-travel-time
-Байршлуудын хоорондох зорчих цагийг тооцоолно.
+### 1. Байршил оруулах
+- Гэр, сургууль, ажлын хаягуудыг оруулна уу
+- Google Places API автоматаар санал болгох
+- "Хадгалах" товчоор байршлыг хадгална
 
-**Request body:**
-```json
-{
-  "home": "Улаанбаатар хот, Сүхбаатар дүүрэг",
-  "work": "Улаанбаатар хот, Чингэлтэй дүүрэг", 
-  "school": "Улаанбаатар хот, Баянзүрх дүүрэг"
-}
+### 2. Google Sheets холболт
+- "Google-тэй холбогдох" товчийг дарна
+- Google account-аар нэвтэрч зөвшөөрөл өгнө
+- Автоматаар spreadsheet үүсгэгдэнэ
+
+### 3. Тооцоолол хийх
+- "Тооцоолох" товчийг дарна
+- Бодит зорчих цаг болон статистик харагдана
+- Google Sheets-тэй холбогдсон бол автоматаар хадгалагдана
+
+## 🔧 Хөгжүүлэлт
+
+### Project бүтэц
+```
+travel-time-calculator/
+├── src/
+│   ├── main.py              # Flask application
+│   ├── routes/
+│   │   ├── travel.py        # Travel time calculation
+│   │   └── sheets.py        # Google Sheets integration
+│   ├── config/
+│   │   └── client_secret.json  # Google OAuth credentials
+│   └── static/              # React build files
+├── frontend/                # React source code
+├── requirements.txt         # Python dependencies
+└── README.md
 ```
 
-### POST /api/calculate-time-loss
-Цаг алдалтын статистикийг тооцоолно.
+### API Endpoints
 
-### POST /api/save-locations
-Байршлуудыг хадгална.
+#### Travel Routes
+- `POST /api/calculate-travel-time` - Зорчих цаг тооцоолох
+- `POST /api/calculate-time-loss` - Цаг алдалт тооцоолох
+- `POST /api/search-places` - Байршил хайх
+- `POST /api/save-locations` - Байршил хадгалах
+- `GET /api/load-locations` - Байршил ачаалах
 
-### GET /api/load-locations
-Хадгалагдсан байршлуудыг ачаална.
+#### Google Sheets Routes
+- `GET /api/auth-google` - Google OAuth эхлүүлэх
+- `GET /api/oauth2callback` - OAuth callback
+- `GET /api/check-auth` - Authentication шалгах
+- `POST /api/create-spreadsheet` - Spreadsheet үүсгэх
+- `POST /api/save-to-sheets` - Өгөгдөл хадгалах
+- `POST /api/logout` - Гарах
 
-## Хөгжүүлэлт
+## 🌐 Deployment
 
-Одоогоор mock өгөгдөл ашиглаж байна. Бодит Google Maps API ашиглахын тулд:
+### Manus Cloud Platform дээр deploy хийх
+```bash
+# Backend deploy
+manus deploy backend --framework flask --project-dir .
 
-1. Google Cloud Console-д Google Maps API идэвхжүүлэх
-2. API key авах
-3. `src/routes/travel.py` файлд `GOOGLE_MAPS_API_KEY` өөрчлөх
+# Frontend deploy (хэрэв тусад нь deploy хийх бол)
+manus deploy frontend --framework react --project-dir frontend
+```
 
-## Лиценз
+### Бусад платформ дээр deploy хийх
+1. Environment variables тохируулах
+2. Google APIs-ийн domain restrictions шинэчлэх
+3. OAuth redirect URIs шинэчлэх
 
-MIT License
+## 🔒 Аюулгүй байдал
 
-## Хувь нэмэр оруулах
+- API key-үүдийг environment variables-д хадгална
+- Google OAuth 2.0 ашиглан аюулгүй authentication
+- Client secret файлыг .gitignore-д оруулсан
+- CORS тохиргоо хийсэн
 
-1. Fork хийх
-2. Feature branch үүсгэх
-3. Өөрчлөлт хийх
-4. Pull request илгээх
+## 🤝 Хувь нэмэр оруулах
+
+1. Repository-г fork хийх
+2. Feature branch үүсгэх (`git checkout -b feature/amazing-feature`)
+3. Өөрчлөлтөө commit хийх (`git commit -m 'Add amazing feature'`)
+4. Branch-аа push хийх (`git push origin feature/amazing-feature`)
+5. Pull Request үүсгэх
+
+## 📝 License
+
+MIT License - дэлгэрэнгүй мэдээллийг [LICENSE](LICENSE) файлаас үзнэ үү.
+
+## 👨‍💻 Хөгжүүлэгч
+
+**Temuujin** - [@Temuujinhub](https://github.com/Temuujinhub)
+
+## 🙏 Талархал
+
+- [Google Maps Platform](https://developers.google.com/maps) - Maps APIs
+- [Google Sheets API](https://developers.google.com/sheets) - Spreadsheet integration
+- [React](https://reactjs.org/) - Frontend framework
+- [Flask](https://flask.palletsprojects.com/) - Backend framework
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+
+---
+
+⭐ Хэрэв энэ төсөл танд тустай бол star өгөөрэй!
 
