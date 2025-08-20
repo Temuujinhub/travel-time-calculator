@@ -109,13 +109,12 @@ const WeeklyChart = ({ data, rushHourData }) => {
                 d={chartData.map((day, index) => {
                   const x = (index / (chartData.length - 1)) * 100;
                   const y = maxMinutes > 0 ? 100 - ((day.minutes || 0) / maxMinutes) * 100 : 100;
-                  return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+                  return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
                 }).join(' ')}
                 stroke={viewMode === 'rushHour' ? '#ef4444' : '#3b82f6'}
-                strokeWidth="0.5"
+                strokeWidth="2"
                 fill="none"
                 className="drop-shadow-sm"
-                vectorEffect="non-scaling-stroke"
               />
               
               {/* Data points */}

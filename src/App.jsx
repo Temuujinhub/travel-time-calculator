@@ -182,8 +182,10 @@ function App() {
       const daily_hours = daily_minutes / 60;
 
       // Rush hour time calculation using real traffic data
-      const rush_hour_daily_seconds = h2s_rush.duration_in_traffic + s2w_rush.duration_in_traffic + 
-                                     w2s_rush.duration_in_traffic + s2h_rush.duration_in_traffic;
+      const rush_hour_daily_seconds = (h2s_rush.duration_in_traffic || h2s_rush.duration_value) + 
+                                     (s2w_rush.duration_in_traffic || s2w_rush.duration_value) + 
+                                     (w2s_rush.duration_in_traffic || w2s_rush.duration_value) + 
+                                     (s2h_rush.duration_in_traffic || s2h_rush.duration_value);
       const rush_hour_daily_minutes = Math.round((rush_hour_daily_seconds / 60) * 10) / 10;
       const rush_hour_daily_hours = rush_hour_daily_minutes / 60;
 
@@ -193,9 +195,12 @@ function App() {
       const rush_hour_yearly_hours = Math.round(rush_hour_monthly_hours * 12 * 10) / 10;
 
       // Realistic weekly data based on research
-      const MONDAY_MULTIPLIER = 1.1;    // 10% longer on Monday (post-weekend)
-      const FRIDAY_MULTIPLIER = 1.05;   // 5% longer on Friday (pre-weekend)
-      const WEEKEND_MULTIPLIER = 0.75;  // 25% shorter on weekends
+      const MONDAY_MULTIPLIER = 1.15;    // 15% longer on Monday (post-weekend, heavy traffic)
+      const TUESDAY_MULTIPLIER = 1.05;   // 5% longer on Tuesday (still busy)
+      const WEDNESDAY_MULTIPLIER = 1.0;  // Normal Wednesday
+      const THURSDAY_MULTIPLIER = 1.08;  // 8% longer on Thursday (pre-weekend prep)
+      const FRIDAY_MULTIPLIER = 1.12;    // 12% longer on Friday (weekend prep, early leave)
+      const WEEKEND_MULTIPLIER = 0.7;    // 30% shorter on weekends (less traffic)
 
       const weekly_data = [
         { 
@@ -206,20 +211,20 @@ function App() {
         },
         { 
           day: 'Мягмар', 
-          minutes: daily_minutes, 
-          hours: daily_hours, 
+          minutes: Math.round(daily_minutes * TUESDAY_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * TUESDAY_MULTIPLIER, 
           isWorkday: true 
         },
         { 
           day: 'Лхагва', 
-          minutes: daily_minutes, 
-          hours: daily_hours, 
+          minutes: Math.round(daily_minutes * WEDNESDAY_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * WEDNESDAY_MULTIPLIER, 
           isWorkday: true 
         },
         { 
           day: 'Пүрэв', 
-          minutes: daily_minutes, 
-          hours: daily_hours, 
+          minutes: Math.round(daily_minutes * THURSDAY_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * THURSDAY_MULTIPLIER, 
           isWorkday: true 
         },
         { 
