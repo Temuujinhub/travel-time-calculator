@@ -117,6 +117,12 @@ const AdminPanel = () => {
   };
 
   const handleExportExcel = async () => {
+    if (MOCK_MODE) {
+      // Mock Excel export
+      alert('Demo режимд Excel export боломжгүй. Backend deploy хийгдсэний дараа ажиллана.');
+      return;
+    }
+    
     try {
       const params = new URLSearchParams();
       if (dateFilter.start) params.append('start_date', dateFilter.start);
@@ -142,6 +148,13 @@ const AdminPanel = () => {
 
   const handleDeleteRecord = async (recordId) => {
     if (!confirm('Энэ бичлэгийг устгахдаа итгэлтэй байна уу?')) return;
+
+    if (MOCK_MODE) {
+      // Mock delete - remove from local state
+      setSearchHistory(prev => prev.filter(item => item.id !== recordId));
+      alert('Demo режимд бичлэг устгагдлаа (зөвхөн local).');
+      return;
+    }
 
     try {
       const response = await fetch(`${API_BASE}/admin/search-history/${recordId}`, {
