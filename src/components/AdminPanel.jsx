@@ -16,14 +16,66 @@ const AdminPanel = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
 
+  // Mock data for demo purposes (backend not deployed yet)
+  const MOCK_MODE = true;
   const API_BASE = 'https://58hpi8cwq0vx.manus.space/api';
 
   useEffect(() => {
-    fetchSearchHistory();
-    fetchStatistics();
+    if (MOCK_MODE) {
+      // Load mock data
+      setSearchHistory([
+        {
+          id: 1,
+          home_location: 'Улаанбаатар хот, Сүхбаатар дүүрэг, 1-р хороо',
+          school_location: 'Улаанбаатар хот, Баянзүрх дүүрэг, 15-р хороо',
+          work_location: 'Улаанбаатар хот, Чингэлтэй дүүрэг, Төв хэсэг',
+          daily_time_loss: 85.5,
+          monthly_time_loss: 37.6,
+          yearly_time_loss: 451.2,
+          created_at: '2025-08-20T10:30:00Z'
+        },
+        {
+          id: 2,
+          home_location: 'Улаанбаатар хот, Баянгол дүүрэг, 3-р хороо',
+          school_location: 'Улаанбаатар хот, Сүхбаатар дүүрэг, 5-р хороо',
+          work_location: 'Улаанбаатар хот, Хан-Уул дүүрэг, 4-р хороо',
+          daily_time_loss: 92.3,
+          monthly_time_loss: 40.6,
+          yearly_time_loss: 487.2,
+          created_at: '2025-08-20T09:15:00Z'
+        },
+        {
+          id: 3,
+          home_location: 'Улаанбаатар хот, Чингэлтэй дүүрэг, 7-р хороо',
+          school_location: 'Улаанбаатар хот, Баянзүрх дүүрэг, 12-р хороо',
+          work_location: 'Улаанбаатар хот, Сүхбаатар дүүрэг, Төв хэсэг',
+          daily_time_loss: 78.9,
+          monthly_time_loss: 34.7,
+          yearly_time_loss: 416.4,
+          created_at: '2025-08-20T08:45:00Z'
+        }
+      ]);
+      
+      setStatistics({
+        total_searches: 156,
+        avg_daily_time_loss: 85.2,
+        avg_monthly_time_loss: 37.4,
+        avg_yearly_time_loss: 449.1,
+        most_common_home_area: 'Сүхбаатар дүүрэг',
+        most_common_work_area: 'Чингэлтэй дүүрэг',
+        peak_usage_hour: '09:00-10:00'
+      });
+      
+      setTotalPages(8); // Mock pagination
+      setLoading(false);
+    } else {
+      fetchSearchHistory();
+      fetchStatistics();
+    }
   }, [currentPage]);
 
   const fetchSearchHistory = async () => {
+    if (MOCK_MODE) return; // Skip API call in mock mode
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -51,6 +103,7 @@ const AdminPanel = () => {
   };
 
   const fetchStatistics = async () => {
+    if (MOCK_MODE) return; // Skip API call in mock mode
     try {
       const response = await fetch(`${API_BASE}/admin/statistics`);
       const data = await response.json();
@@ -124,9 +177,18 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Админ хуудас</h1>
-          <p className="text-gray-600">Зорчих цагийн тооцоолуурын хайлтын түүх болон статистик</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Админ хуудас</h1>
+            <p className="text-gray-600">Зорчих цагийн тооцоолуурын хайлтын түүх болон статистик</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="flex items-center gap-2"
+          >
+            ← Буцах
+          </Button>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">

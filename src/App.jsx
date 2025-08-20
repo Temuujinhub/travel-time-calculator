@@ -140,20 +140,96 @@ function App() {
         school_to_home: s2h
       };
 
+      // Rush hour calculations
+      const RUSH_HOUR_MULTIPLIER = 1.4; // 40% increase during rush hour
+      const WEEKEND_MULTIPLIER = 0.8; // 20% decrease on weekends
+
+      // Normal time calculation
       const daily_seconds = h2s.duration_value + s2w.duration_value + w2s.duration_value + s2h.duration_value;
       const daily_minutes = Math.round((daily_seconds / 60) * 10) / 10;
       const daily_hours = daily_minutes / 60;
+
+      // Rush hour time calculation (morning: home->school->work, evening: work->school->home)
+      const morning_rush_seconds = (h2s.duration_value + s2w.duration_value) * RUSH_HOUR_MULTIPLIER;
+      const evening_rush_seconds = (w2s.duration_value + s2h.duration_value) * RUSH_HOUR_MULTIPLIER;
+      const rush_hour_daily_seconds = morning_rush_seconds + evening_rush_seconds;
+      const rush_hour_daily_minutes = Math.round((rush_hour_daily_seconds / 60) * 10) / 10;
+      const rush_hour_daily_hours = rush_hour_daily_minutes / 60;
+
       const monthly_hours = Math.round(daily_hours * 22 * 10) / 10;
       const yearly_hours = Math.round(monthly_hours * 12 * 10) / 10;
+      const rush_hour_monthly_hours = Math.round(rush_hour_daily_hours * 22 * 10) / 10;
+      const rush_hour_yearly_hours = Math.round(rush_hour_monthly_hours * 12 * 10) / 10;
 
+      // Normal weekly data
       const weekly_data = [
-        { day: 'Даваа', minutes: daily_minutes, hours: daily_hours },
-        { day: 'Мягмар', minutes: daily_minutes, hours: daily_hours },
-        { day: 'Лхагва', minutes: daily_minutes, hours: daily_hours },
-        { day: 'Пүрэв', minutes: daily_minutes, hours: daily_hours },
-        { day: 'Баасан', minutes: daily_minutes, hours: daily_hours },
-        { day: 'Бямба', minutes: Math.round(daily_minutes * 0.3) },
-        { day: 'Ням', minutes: Math.round(daily_minutes * 0.3) }
+        { day: 'Даваа', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
+        { day: 'Мягмар', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
+        { day: 'Лхагва', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
+        { day: 'Пүрэв', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
+        { day: 'Баасан', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
+        { day: 'Бямба', minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), hours: daily_hours * WEEKEND_MULTIPLIER, isWorkday: false },
+        { day: 'Ням', minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), hours: daily_hours * WEEKEND_MULTIPLIER, isWorkday: false }
+      ];
+
+      // Rush hour weekly data
+      const rush_hour_weekly_data = [
+        { 
+          day: 'Даваа', 
+          minutes: rush_hour_daily_minutes, 
+          hours: rush_hour_daily_hours, 
+          isWorkday: true, 
+          rushHour: true,
+          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+        },
+        { 
+          day: 'Мягмар', 
+          minutes: rush_hour_daily_minutes, 
+          hours: rush_hour_daily_hours, 
+          isWorkday: true, 
+          rushHour: true,
+          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+        },
+        { 
+          day: 'Лхагва', 
+          minutes: rush_hour_daily_minutes, 
+          hours: rush_hour_daily_hours, 
+          isWorkday: true, 
+          rushHour: true,
+          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+        },
+        { 
+          day: 'Пүрэв', 
+          minutes: rush_hour_daily_minutes, 
+          hours: rush_hour_daily_hours, 
+          isWorkday: true, 
+          rushHour: true,
+          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+        },
+        { 
+          day: 'Баасан', 
+          minutes: rush_hour_daily_minutes, 
+          hours: rush_hour_daily_hours, 
+          isWorkday: true, 
+          rushHour: true,
+          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+        },
+        { 
+          day: 'Бямба', 
+          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), 
+          hours: daily_hours * WEEKEND_MULTIPLIER, 
+          isWorkday: false, 
+          rushHour: false,
+          extraMinutes: 0
+        },
+        { 
+          day: 'Ням', 
+          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), 
+          hours: daily_hours * WEEKEND_MULTIPLIER, 
+          isWorkday: false, 
+          rushHour: false,
+          extraMinutes: 0
+        }
       ];
 
       setResults({
@@ -162,7 +238,14 @@ function App() {
         daily_time_loss: daily_minutes,
         monthly_time_loss: monthly_hours,
         yearly_time_loss: yearly_hours,
-        weekly_data
+        rush_hour_daily_time_loss: rush_hour_daily_minutes,
+        rush_hour_monthly_time_loss: rush_hour_monthly_hours,
+        rush_hour_yearly_time_loss: rush_hour_yearly_hours,
+        weekly_data,
+        rush_hour_weekly_data,
+        rush_hour_extra_daily: Math.round(rush_hour_daily_minutes - daily_minutes),
+        rush_hour_extra_monthly: Math.round((rush_hour_monthly_hours - monthly_hours) * 60),
+        rush_hour_extra_yearly: Math.round((rush_hour_yearly_hours - yearly_hours) * 60)
       });
 
       // Draw route
@@ -360,7 +443,10 @@ function App() {
                   <CardDescription>Долоо хоногийн өдөр бүрийн харьцуулалт</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <WeeklyChart data={results.weekly_data} />
+                  <WeeklyChart 
+                    data={results.weekly_data} 
+                    rushHourData={results.rush_hour_weekly_data}
+                  />
                 </CardContent>
               </Card>
             )}
