@@ -10,7 +10,7 @@ import AdminPanel from './components/AdminPanel';
 import './App.css';
 
 // Google Maps API key
-const GOOGLE_MAPS_API_KEY = 'AIzaSyD_RxGFjYwvqoDIq17ZMhdLcChy0tTTrnU';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBvOkBwgGlbUiuS-oKrPiC3a4z8dC-L_kE';
 
 function App() {
   const [currentView, setCurrentView] = useState('calculator'); // 'calculator' | 'admin'
