@@ -103,18 +103,19 @@ const WeeklyChart = ({ data, rushHourData }) => {
 
           {/* Line Chart SVG */}
           <div className="absolute left-12 right-6 top-6 bottom-16">
-            <svg className="w-full h-full">
+            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
               {/* Line path */}
               <path
                 d={chartData.map((day, index) => {
                   const x = (index / (chartData.length - 1)) * 100;
                   const y = maxMinutes > 0 ? 100 - ((day.minutes || 0) / maxMinutes) * 100 : 100;
-                  return `${index === 0 ? 'M' : 'L'} ${x}% ${y}%`;
+                  return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
                 }).join(' ')}
                 stroke={viewMode === 'rushHour' ? '#ef4444' : '#3b82f6'}
-                strokeWidth="3"
+                strokeWidth="0.5"
                 fill="none"
                 className="drop-shadow-sm"
+                vectorEffect="non-scaling-stroke"
               />
               
               {/* Data points */}
@@ -127,24 +128,25 @@ const WeeklyChart = ({ data, rushHourData }) => {
                   <g key={index}>
                     {/* Point circle */}
                     <circle
-                      cx={`${x}%`}
-                      cy={`${y}%`}
-                      r={isSelected ? "8" : "6"}
+                      cx={x}
+                      cy={y}
+                      r="1.5"
                       fill={isSelected ? '#eab308' : (viewMode === 'rushHour' ? '#ef4444' : '#3b82f6')}
-                      stroke="white"
-                      strokeWidth="2"
-                      className="cursor-pointer transition-all duration-200 hover:r-8"
+                      className={`cursor-pointer transition-all ${
+                        isSelected ? 'drop-shadow-lg' : 'hover:drop-shadow-md'
+                      }`}
                       onClick={() => setSelectedDay(isSelected ? null : index)}
                     />
                     
-                    {/* Value label above point */}
+                    {/* Value label */}
                     <text
-                      x={`${x}%`}
-                      y={`${Math.max(y - 8, 5)}%`}
+                      x={x}
+                      y={Math.max(y - 5, 5)}
                       textAnchor="middle"
                       className={`text-xs font-medium fill-current transition-colors ${
                         isSelected ? 'text-yellow-600' : 'text-gray-600'
                       }`}
+                      style={{ fontSize: '3px' }}
                     >
                       {formatTime(day.minutes || 0)}
                     </text>
@@ -235,7 +237,7 @@ const WeeklyChart = ({ data, rushHourData }) => {
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
           <h5 className="font-semibold text-purple-800 mb-2">Сарын тооцоо</h5>
           <div className="text-2xl font-bold text-purple-600">
-            {formatTime(totalWeeklyMinutes * 4.33)}
+            {formatTime(Math.round(totalWeeklyMinutes * 4.33))}
           </div>
           <div className="text-sm text-purple-500">
             ≈ {((totalWeeklyMinutes * 4.33) / (24 * 60)).toFixed(1)} өдөр

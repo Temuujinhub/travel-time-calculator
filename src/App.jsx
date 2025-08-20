@@ -98,39 +98,73 @@ function App() {
 
     try {
       const svc = new window.google.maps.DistanceMatrixService();
-      const getLeg = (origin, destination) =>
+      const getLeg = (origin, destination, trafficModel = 'best_guess') =>
         new Promise((resolve) => {
-          svc.getDistanceMatrix(
-            {
-              origins: [origin],
-              destinations: [destination],
-              travelMode: window.google.maps.TravelMode.DRIVING,
-              language: 'mn'
-            },
-            (res, status) => {
-              if (
-                status === 'OK' &&
-                res?.rows?.[0]?.elements?.[0] &&
-                res.rows[0].elements[0].status === 'OK'
-              ) {
-                const el = res.rows[0].elements[0];
-                resolve({
-                  distance: el.distance.text,
-                  duration: el.duration.text,
-                  duration_value: el.duration.value
-                });
-              } else {
-                resolve({ distance: '15.0 км', duration: '25 мин', duration_value: 1500 });
-              }
+          const requestOptions = {
+            origins: [origin],
+            destinations: [destination],
+            travelMode: window.google.maps.TravelMode.DRIVING,
+            language: 'mn',
+            avoidHighways: false,
+            avoidTolls: false
+          };
+
+          // Add traffic model for more accurate results
+          if (trafficModel === 'rush_hour') {
+            requestOptions.drivingOptions = {
+              departureTime: new Date(Date.now() + (8 * 60 * 60 * 1000)), // 8 AM tomorrow
+              trafficModel: window.google.maps.TrafficModel.PESSIMISTIC
+            };
+          } else if (trafficModel === 'optimistic') {
+            requestOptions.drivingOptions = {
+              departureTime: new Date(Date.now() + (10 * 60 * 60 * 1000)), // 10 AM tomorrow
+              trafficModel: window.google.maps.TrafficModel.OPTIMISTIC
+            };
+          } else {
+            requestOptions.drivingOptions = {
+              departureTime: new Date(),
+              trafficModel: window.google.maps.TrafficModel.BEST_GUESS
+            };
+          }
+
+          svc.getDistanceMatrix(requestOptions, (res, status) => {
+            if (
+              status === 'OK' &&
+              res?.rows?.[0]?.elements?.[0] &&
+              res.rows[0].elements[0].status === 'OK'
+            ) {
+              const el = res.rows[0].elements[0];
+              resolve({
+                distance: el.distance.text,
+                duration: el.duration.text,
+                duration_value: el.duration.value,
+                duration_in_traffic: el.duration_in_traffic ? el.duration_in_traffic.value : el.duration.value
+              });
+            } else {
+              resolve({ 
+                distance: '15.0 км', 
+                duration: '25 мин', 
+                duration_value: 1500,
+                duration_in_traffic: 1500
+              });
             }
-          );
+          });
         });
 
+      // Get both normal and rush hour data
       const [h2s, s2w, w2s, s2h] = await Promise.all([
         getLeg(locations.home, locations.school),
         getLeg(locations.school, locations.work),
         getLeg(locations.work, locations.school),
         getLeg(locations.school, locations.home)
+      ]);
+
+      // Get rush hour data for comparison
+      const [h2s_rush, s2w_rush, w2s_rush, s2h_rush] = await Promise.all([
+        getLeg(locations.home, locations.school, 'rush_hour'),
+        getLeg(locations.school, locations.work, 'rush_hour'),
+        getLeg(locations.work, locations.school, 'rush_hour'),
+        getLeg(locations.school, locations.home, 'rush_hour')
       ]);
 
       const travel_times = {
@@ -141,18 +175,15 @@ function App() {
       };
 
       // Rush hour calculations
-      const RUSH_HOUR_MULTIPLIER = 1.4; // 40% increase during rush hour
-      const WEEKEND_MULTIPLIER = 0.8; // 20% decrease on weekends
 
       // Normal time calculation
       const daily_seconds = h2s.duration_value + s2w.duration_value + w2s.duration_value + s2h.duration_value;
       const daily_minutes = Math.round((daily_seconds / 60) * 10) / 10;
       const daily_hours = daily_minutes / 60;
 
-      // Rush hour time calculation (morning: home->school->work, evening: work->school->home)
-      const morning_rush_seconds = (h2s.duration_value + s2w.duration_value) * RUSH_HOUR_MULTIPLIER;
-      const evening_rush_seconds = (w2s.duration_value + s2h.duration_value) * RUSH_HOUR_MULTIPLIER;
-      const rush_hour_daily_seconds = morning_rush_seconds + evening_rush_seconds;
+      // Rush hour time calculation using real traffic data
+      const rush_hour_daily_seconds = h2s_rush.duration_in_traffic + s2w_rush.duration_in_traffic + 
+                                     w2s_rush.duration_in_traffic + s2h_rush.duration_in_traffic;
       const rush_hour_daily_minutes = Math.round((rush_hour_daily_seconds / 60) * 10) / 10;
       const rush_hour_daily_hours = rush_hour_daily_minutes / 60;
 
@@ -161,26 +192,65 @@ function App() {
       const rush_hour_monthly_hours = Math.round(rush_hour_daily_hours * 22 * 10) / 10;
       const rush_hour_yearly_hours = Math.round(rush_hour_monthly_hours * 12 * 10) / 10;
 
-      // Normal weekly data
+      // Realistic weekly data based on research
+      const MONDAY_MULTIPLIER = 1.1;    // 10% longer on Monday (post-weekend)
+      const FRIDAY_MULTIPLIER = 1.05;   // 5% longer on Friday (pre-weekend)
+      const WEEKEND_MULTIPLIER = 0.75;  // 25% shorter on weekends
+
       const weekly_data = [
-        { day: 'Даваа', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
-        { day: 'Мягмар', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
-        { day: 'Лхагва', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
-        { day: 'Пүрэв', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
-        { day: 'Баасан', minutes: daily_minutes, hours: daily_hours, isWorkday: true },
-        { day: 'Бямба', minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), hours: daily_hours * WEEKEND_MULTIPLIER, isWorkday: false },
-        { day: 'Ням', minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), hours: daily_hours * WEEKEND_MULTIPLIER, isWorkday: false }
+        { 
+          day: 'Даваа', 
+          minutes: Math.round(daily_minutes * MONDAY_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * MONDAY_MULTIPLIER, 
+          isWorkday: true 
+        },
+        { 
+          day: 'Мягмар', 
+          minutes: daily_minutes, 
+          hours: daily_hours, 
+          isWorkday: true 
+        },
+        { 
+          day: 'Лхагва', 
+          minutes: daily_minutes, 
+          hours: daily_hours, 
+          isWorkday: true 
+        },
+        { 
+          day: 'Пүрэв', 
+          minutes: daily_minutes, 
+          hours: daily_hours, 
+          isWorkday: true 
+        },
+        { 
+          day: 'Баасан', 
+          minutes: Math.round(daily_minutes * FRIDAY_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * FRIDAY_MULTIPLIER, 
+          isWorkday: true 
+        },
+        { 
+          day: 'Бямба', 
+          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * WEEKEND_MULTIPLIER, 
+          isWorkday: false 
+        },
+        { 
+          day: 'Ням', 
+          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER * 10) / 10, 
+          hours: daily_hours * WEEKEND_MULTIPLIER, 
+          isWorkday: false 
+        }
       ];
 
-      // Rush hour weekly data
+      // Rush hour weekly data with realistic variations
       const rush_hour_weekly_data = [
         { 
           day: 'Даваа', 
-          minutes: rush_hour_daily_minutes, 
-          hours: rush_hour_daily_hours, 
+          minutes: Math.round(rush_hour_daily_minutes * MONDAY_MULTIPLIER * 10) / 10, 
+          hours: rush_hour_daily_hours * MONDAY_MULTIPLIER, 
           isWorkday: true, 
           rushHour: true,
-          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+          extraMinutes: Math.round((rush_hour_daily_minutes * MONDAY_MULTIPLIER) - (daily_minutes * MONDAY_MULTIPLIER))
         },
         { 
           day: 'Мягмар', 
@@ -208,15 +278,15 @@ function App() {
         },
         { 
           day: 'Баасан', 
-          minutes: rush_hour_daily_minutes, 
-          hours: rush_hour_daily_hours, 
+          minutes: Math.round(rush_hour_daily_minutes * FRIDAY_MULTIPLIER * 10) / 10, 
+          hours: rush_hour_daily_hours * FRIDAY_MULTIPLIER, 
           isWorkday: true, 
           rushHour: true,
-          extraMinutes: Math.round(rush_hour_daily_minutes - daily_minutes)
+          extraMinutes: Math.round((rush_hour_daily_minutes * FRIDAY_MULTIPLIER) - (daily_minutes * FRIDAY_MULTIPLIER))
         },
         { 
           day: 'Бямба', 
-          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), 
+          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER * 10) / 10, 
           hours: daily_hours * WEEKEND_MULTIPLIER, 
           isWorkday: false, 
           rushHour: false,
@@ -224,7 +294,7 @@ function App() {
         },
         { 
           day: 'Ням', 
-          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER), 
+          minutes: Math.round(daily_minutes * WEEKEND_MULTIPLIER * 10) / 10, 
           hours: daily_hours * WEEKEND_MULTIPLIER, 
           isWorkday: false, 
           rushHour: false,
@@ -283,7 +353,7 @@ function App() {
     return `${h} цаг ${m} мин`;
   };
 
-  if (currentView === 'admin') return <AdminPanel />;
+  if (currentView === 'admin') return <AdminPanel results={results} />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

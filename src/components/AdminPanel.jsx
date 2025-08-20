@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Download, Search, Calendar, Users, Clock, MapPin, Trash2, RefreshCw } from 'lucide-react';
 
-const AdminPanel = () => {
+const AdminPanel = ({ results }) => {
   const [searchHistory, setSearchHistory] = useState([]);
   const [statistics, setStatistics] = useState({});
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const AdminPanel = () => {
   useEffect(() => {
     if (MOCK_MODE) {
       // Load mock data
-      setSearchHistory([
+      let mockHistory = [
         {
           id: 1,
           home_location: 'Улаанбаатар хот, Сүхбаатар дүүрэг, 1-р хороо',
@@ -48,16 +48,33 @@ const AdminPanel = () => {
           id: 3,
           home_location: 'Улаанбаатар хот, Чингэлтэй дүүрэг, 7-р хороо',
           school_location: 'Улаанбаатар хот, Баянзүрх дүүрэг, 12-р хороо',
-          work_location: 'Улаанбаатар хот, Сүхбаатар дүүрэг, Төв хэсэг',
+          work_location: 'Улаанбаатар хот, Сүхбаатар дүүрэг, 9-р хороо',
           daily_time_loss: 78.9,
           monthly_time_loss: 34.7,
-          yearly_time_loss: 416.4,
+          yearly_time_loss: 416.8,
           created_at: '2025-08-20T08:45:00Z'
         }
-      ]);
+      ];
+
+      // Add new calculation result if available
+      if (results && results.success && results.travel_times) {
+        const newRecord = {
+          id: mockHistory.length + 1,
+          home_location: results.travel_times.find(t => t.route.includes('Гэр'))?.route || 'Тодорхойгүй',
+          school_location: results.travel_times.find(t => t.route.includes('Сургууль'))?.route || 'Тодорхойгүй',
+          work_location: results.travel_times.find(t => t.route.includes('Ажил'))?.route || 'Тодорхойгүй',
+          daily_time_loss: results.daily_time_loss || 0,
+          monthly_time_loss: results.monthly_time_loss || 0,
+          yearly_time_loss: results.yearly_time_loss || 0,
+          created_at: new Date().toISOString()
+        };
+        mockHistory.unshift(newRecord); // Add to beginning
+      }
+
+      setSearchHistory(mockHistory);
       
       setStatistics({
-        total_searches: 156,
+        total_searches: mockHistory.length,
         avg_daily_time_loss: 85.2,
         avg_monthly_time_loss: 37.4,
         avg_yearly_time_loss: 449.1,
@@ -72,7 +89,7 @@ const AdminPanel = () => {
       fetchSearchHistory();
       fetchStatistics();
     }
-  }, [currentPage]);
+  }, [currentPage, results]); // Add results to dependency array
 
   const fetchSearchHistory = async () => {
     if (MOCK_MODE) return; // Skip API call in mock mode
