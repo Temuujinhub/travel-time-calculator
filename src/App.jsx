@@ -4,7 +4,7 @@ import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
 import { Alert, AlertDescription } from './components/ui/alert';
-import { MapPin, Calculator, Home, School, Briefcase, Clock, Calendar, TrendingUp, Settings } from 'lucide-react';
+import { MapPin, Calculator, Home, School, Briefcase, Clock, Calendar, TrendingUp, Settings, AlertTriangle } from 'lucide-react';
 import WeeklyChart from './components/WeeklyChart';
 import AdminPanel from './components/AdminPanel';
 import './App.css';
@@ -304,18 +304,27 @@ function App() {
 
       setResults({
         success: true,
+        locations: {
+          home: homeLocation,
+          school: schoolLocation,
+          work: workLocation
+        },
         travel_times,
-        daily_time_loss: daily_minutes,
-        monthly_time_loss: monthly_hours,
-        yearly_time_loss: yearly_hours,
-        rush_hour_daily_time_loss: rush_hour_daily_minutes,
-        rush_hour_monthly_time_loss: rush_hour_monthly_hours,
-        rush_hour_yearly_time_loss: rush_hour_yearly_hours,
+        traffic_data: {
+          normal: { h2s, s2w, w2s, s2h },
+          rush_hour: { h2s_rush, s2w_rush, w2s_rush, s2h_rush }
+        },
+        daily_time_loss: Math.round(daily_minutes * 10) / 10,
+        monthly_time_loss: Math.round(monthly_hours * 10) / 10,
+        yearly_time_loss: Math.round(yearly_hours * 10) / 10,
+        rush_hour_daily_time_loss: Math.round(rush_hour_daily_minutes * 10) / 10,
+        rush_hour_monthly_time_loss: Math.round(rush_hour_monthly_hours * 10) / 10,
+        rush_hour_yearly_time_loss: Math.round(rush_hour_yearly_hours * 10) / 10,
         weekly_data,
         rush_hour_weekly_data,
-        rush_hour_extra_daily: Math.round(rush_hour_daily_minutes - daily_minutes),
-        rush_hour_extra_monthly: Math.round((rush_hour_monthly_hours - monthly_hours) * 60),
-        rush_hour_extra_yearly: Math.round((rush_hour_yearly_hours - yearly_hours) * 60)
+        rush_hour_extra_daily: Math.round((rush_hour_daily_minutes - daily_minutes) * 10) / 10,
+        rush_hour_extra_monthly: Math.round(((rush_hour_monthly_hours - monthly_hours) * 60) * 10) / 10,
+        rush_hour_extra_yearly: Math.round(((rush_hour_yearly_hours - yearly_hours) * 60) * 10) / 10
       });
 
       // Draw route
@@ -470,6 +479,36 @@ function App() {
                     <div className="text-2xl font-bold text-orange-600">{results.travel_times.school_to_home.duration}</div>
                   </div>
                 </div>
+
+                {/* Traffic Data Display */}
+                {results.traffic_data && (
+                  <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h4 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Google Maps Замын Ачааллын Мэдээлэл
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <h5 className="font-medium text-gray-700 mb-2">Энгийн нөхцөл:</h5>
+                        <ul className="space-y-1 text-gray-600">
+                          <li>Гэр → Сургууль: {results.traffic_data.normal.h2s.duration} ({results.traffic_data.normal.h2s.distance})</li>
+                          <li>Сургууль → Ажил: {results.traffic_data.normal.s2w.duration} ({results.traffic_data.normal.s2w.distance})</li>
+                          <li>Ажил → Сургууль: {results.traffic_data.normal.w2s.duration} ({results.traffic_data.normal.w2s.distance})</li>
+                          <li>Сургууль → Гэр: {results.traffic_data.normal.s2h.duration} ({results.traffic_data.normal.s2h.distance})</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-red-700 mb-2">Ачаалалтай цаг (Rush Hour):</h5>
+                        <ul className="space-y-1 text-red-600">
+                          <li>Гэр → Сургууль: {results.traffic_data.rush_hour.h2s_rush.duration_in_traffic_text || results.traffic_data.rush_hour.h2s_rush.duration}</li>
+                          <li>Сургууль → Ажил: {results.traffic_data.rush_hour.s2w_rush.duration_in_traffic_text || results.traffic_data.rush_hour.s2w_rush.duration}</li>
+                          <li>Ажил → Сургууль: {results.traffic_data.rush_hour.w2s_rush.duration_in_traffic_text || results.traffic_data.rush_hour.w2s_rush.duration}</li>
+                          <li>Сургууль → Гэр: {results.traffic_data.rush_hour.s2h_rush.duration_in_traffic_text || results.traffic_data.rush_hour.s2h_rush.duration}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card className="bg-blue-600 text-white"><CardContent className="p-6">

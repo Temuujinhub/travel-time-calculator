@@ -57,15 +57,15 @@ const AdminPanel = ({ results }) => {
       ];
 
       // Add new calculation result if available
-      if (results && results.success && results.travel_times) {
+      if (results && results.success) {
         const newRecord = {
           id: mockHistory.length + 1,
-          home_location: results.travel_times.find(t => t.route.includes('Гэр'))?.route || 'Тодорхойгүй',
-          school_location: results.travel_times.find(t => t.route.includes('Сургууль'))?.route || 'Тодорхойгүй',
-          work_location: results.travel_times.find(t => t.route.includes('Ажил'))?.route || 'Тодорхойгүй',
-          daily_time_loss: results.daily_time_loss || 0,
-          monthly_time_loss: results.monthly_time_loss || 0,
-          yearly_time_loss: results.yearly_time_loss || 0,
+          home_location: results.locations?.home || 'Тодорхойгүй',
+          school_location: results.locations?.school || 'Тодорхойгүй', 
+          work_location: results.locations?.work || 'Тодорхойгүй',
+          daily_time_loss: Math.round((results.daily_time_loss || 0) * 10) / 10,
+          monthly_time_loss: Math.round((results.monthly_time_loss || 0) * 10) / 10,
+          yearly_time_loss: Math.round((results.yearly_time_loss || 0) * 10) / 10,
           created_at: new Date().toISOString()
         };
         mockHistory.unshift(newRecord); // Add to beginning

@@ -240,7 +240,7 @@ const WeeklyChart = ({ data, rushHourData }) => {
             {formatTime(Math.round(totalWeeklyMinutes * 4.33))}
           </div>
           <div className="text-sm text-purple-500">
-            ≈ {((totalWeeklyMinutes * 4.33) / (24 * 60)).toFixed(1)} өдөр
+            ≈ {Math.round((totalWeeklyMinutes * 4.33) / (24 * 60) * 10) / 10} өдөр
           </div>
         </div>
       </div>
