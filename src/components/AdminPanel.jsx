@@ -358,14 +358,14 @@ const AdminPanel = () => {
                         searchHistory.map((record) => (
                           <TableRow key={record.id}>
                             <TableCell>{record.id}</TableCell>
-                            <TableCell className="max-w-xs truncate" title={record.home_address}>
-                              {record.home_address}
+                            <TableCell className="max-w-xs truncate" title={record.home_location}>
+                              {record.home_location}
                             </TableCell>
-                            <TableCell className="max-w-xs truncate" title={record.school_address}>
-                              {record.school_address}
+                            <TableCell className="max-w-xs truncate" title={record.school_location}>
+                              {record.school_location}
                             </TableCell>
-                            <TableCell className="max-w-xs truncate" title={record.work_address}>
-                              {record.work_address}
+                            <TableCell className="max-w-xs truncate" title={record.work_location}>
+                              {record.work_location}
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">

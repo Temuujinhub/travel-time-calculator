@@ -78,9 +78,9 @@ const WeeklyChart = ({ data, rushHourData }) => {
         </div>
       )}
       
-      {/* Interactive Bar Chart */}
+      {/* Interactive Line Chart */}
       <div className="mb-8">
-        <div className="flex items-end justify-between bg-gray-50 p-6 rounded-lg relative" style={{ height: chartHeight + 80 }}>
+        <div className="bg-gray-50 p-6 rounded-lg relative" style={{ height: chartHeight + 80 }}>
           {/* Y-axis labels */}
           <div className="absolute left-2 top-6 bottom-16 flex flex-col justify-between text-xs text-gray-500">
             <span>{Math.round(maxMinutes)}м</span>
@@ -101,44 +101,71 @@ const WeeklyChart = ({ data, rushHourData }) => {
             ))}
           </div>
 
-          {/* Bars */}
-          <div className="flex items-end justify-between w-full ml-12 mr-6">
-            {chartData.map((day, index) => {
-              const barHeight = maxMinutes > 0 ? ((day.minutes || 0) / maxMinutes) * chartHeight : 0;
-              const isSelected = selectedDay === index;
+          {/* Line Chart SVG */}
+          <div className="absolute left-12 right-6 top-6 bottom-16">
+            <svg className="w-full h-full">
+              {/* Line path */}
+              <path
+                d={chartData.map((day, index) => {
+                  const x = (index / (chartData.length - 1)) * 100;
+                  const y = maxMinutes > 0 ? 100 - ((day.minutes || 0) / maxMinutes) * 100 : 100;
+                  return `${index === 0 ? 'M' : 'L'} ${x}% ${y}%`;
+                }).join(' ')}
+                stroke={viewMode === 'rushHour' ? '#ef4444' : '#3b82f6'}
+                strokeWidth="3"
+                fill="none"
+                className="drop-shadow-sm"
+              />
               
+              {/* Data points */}
+              {chartData.map((day, index) => {
+                const x = (index / (chartData.length - 1)) * 100;
+                const y = maxMinutes > 0 ? 100 - ((day.minutes || 0) / maxMinutes) * 100 : 100;
+                const isSelected = selectedDay === index;
+                
+                return (
+                  <g key={index}>
+                    {/* Point circle */}
+                    <circle
+                      cx={`${x}%`}
+                      cy={`${y}%`}
+                      r={isSelected ? "8" : "6"}
+                      fill={isSelected ? '#eab308' : (viewMode === 'rushHour' ? '#ef4444' : '#3b82f6')}
+                      stroke="white"
+                      strokeWidth="2"
+                      className="cursor-pointer transition-all duration-200 hover:r-8"
+                      onClick={() => setSelectedDay(isSelected ? null : index)}
+                    />
+                    
+                    {/* Value label above point */}
+                    <text
+                      x={`${x}%`}
+                      y={`${Math.max(y - 8, 5)}%`}
+                      textAnchor="middle"
+                      className={`text-xs font-medium fill-current transition-colors ${
+                        isSelected ? 'text-yellow-600' : 'text-gray-600'
+                      }`}
+                    >
+                      {formatTime(day.minutes || 0)}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* X-axis labels */}
+          <div className="absolute left-12 right-6 bottom-2 flex justify-between">
+            {chartData.map((day, index) => {
+              const isSelected = selectedDay === index;
               return (
-                <div 
-                  key={index} 
-                  className="flex flex-col items-center flex-1 mx-1 cursor-pointer group"
-                  onClick={() => setSelectedDay(isSelected ? null : index)}
-                >
-                  {/* Value label */}
-                  <div className={`text-xs mb-2 font-medium transition-colors ${
-                    isSelected ? 'text-yellow-600' : 'text-gray-600'
-                  }`}>
-                    {formatTime(day.minutes || 0)}
-                  </div>
-                  
-                  {/* Bar */}
-                  <div 
-                    className={`w-full rounded-t-md transition-all duration-300 ${
-                      getBarColor(day, isSelected)
-                    } group-hover:shadow-lg`}
-                    style={{ 
-                      height: `${barHeight}px`, 
-                      minHeight: (day.minutes || 0) > 0 ? '4px' : '0px' 
-                    }}
-                  />
-                  
-                  {/* Day label */}
-                  <div className={`text-sm font-medium mt-3 transition-colors ${
+                <div key={index} className="flex flex-col items-center cursor-pointer"
+                     onClick={() => setSelectedDay(isSelected ? null : index)}>
+                  <div className={`text-sm font-medium transition-colors ${
                     isSelected ? 'text-yellow-600' : 'text-gray-700'
                   }`}>
                     {day.day}
                   </div>
-                  
-                  {/* Status */}
                   <div className={`text-xs mt-1 ${
                     !day.isWorkday ? 'text-gray-400' :
                     viewMode === 'rushHour' && day.rushHour ? 'text-red-500' :
@@ -216,52 +243,103 @@ const WeeklyChart = ({ data, rushHourData }) => {
         </div>
       </div>
 
-      {/* Comparison Chart */}
+      {/* Time Saving Tips */}
       {viewMode === 'rushHour' && rushHourData && (
         <div className="mb-6">
-          <h4 className="text-lg font-semibold mb-4 text-gray-700">Энгийн цаг vs Ачаалалтай цагийн харьцуулалт</h4>
-          <div className="space-y-3">
-            {data.filter(d => d.isWorkday !== false).map((normalDay, index) => {
-              const rushDay = rushHourData.find(r => r.day === normalDay.day);
-              if (!rushDay) return null;
-              
-              const normalMinutes = normalDay.minutes || 0;
-              const rushMinutes = rushDay.minutes || 0;
-              const difference = rushMinutes - normalMinutes;
-              
-              return (
-                <div key={index} className="flex items-center space-x-4">
-                  <div className="w-16 text-sm font-medium text-gray-700">{normalDay.day}</div>
-                  <div className="flex-1 flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-4 relative">
-                      <div 
-                        className="bg-blue-500 h-full rounded-full"
-                        style={{ width: `${(normalMinutes / rushMinutes) * 100}%` }}
-                      />
-                      <div 
-                        className="bg-red-500 h-full rounded-r-full absolute top-0"
-                        style={{ 
-                          left: `${(normalMinutes / rushMinutes) * 100}%`,
-                          width: `${(difference / rushMinutes) * 100}%`
-                        }}
-                      />
-                    </div>
-                    <div className="text-sm text-gray-600 w-20">
-                      +{difference} мин
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex items-center justify-center space-x-6 mt-4 text-sm">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-              <span>Энгийн цаг</span>
+          <h4 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+            <span className="mr-2">💡</span>
+            Цаг хэмнэх зөвлөмжүүд
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h5 className="font-semibold text-blue-800 mb-2 flex items-center">
+                <span className="mr-2">⏰</span>
+                Цагийн хуваарь өөрчлөх
+              </h5>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Өглөө 7:00-с өмнө гарах</li>
+                <li>• Орой 19:00-с хойш харих</li>
+                <li>• Уян хатан ажлын цаг ашиглах</li>
+              </ul>
+              <div className="mt-2 text-xs text-blue-600">
+                Хэмнэгдэх цаг: <strong>20-30 мин/өдөр</strong>
+              </div>
             </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-red-500 rounded mr-2"></div>
-              <span>Нэмэгдэх цаг</span>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h5 className="font-semibold text-green-800 mb-2 flex items-center">
+                <span className="mr-2">🚌</span>
+                Тээврийн хэрэгсэл солих
+              </h5>
+              <ul className="text-sm text-green-700 space-y-1">
+                <li>• Метро ашиглах</li>
+                <li>• Автобусны тусгай зурвас</li>
+                <li>• Хослон зорчих (carpool)</li>
+              </ul>
+              <div className="mt-2 text-xs text-green-600">
+                Хэмнэгдэх цаг: <strong>15-25 мин/өдөр</strong>
+              </div>
+            </div>
+            
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h5 className="font-semibold text-purple-800 mb-2 flex items-center">
+                <span className="mr-2">🏠</span>
+                Алсын ажил
+              </h5>
+              <ul className="text-sm text-purple-700 space-y-1">
+                <li>• Гэрээс ажиллах өдрүүд</li>
+                <li>• Хибрид ажлын горим</li>
+                <li>• Цахим хурал ашиглах</li>
+              </ul>
+              <div className="mt-2 text-xs text-purple-600">
+                Хэмнэгдэх цаг: <strong>Бүх зорчих цаг</strong>
+              </div>
+            </div>
+            
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <h5 className="font-semibold text-orange-800 mb-2 flex items-center">
+                <span className="mr-2">📍</span>
+                Байршил сонгох
+              </h5>
+              <ul className="text-sm text-orange-700 space-y-1">
+                <li>• Ажилд ойр байшин</li>
+                <li>• Тээврийн зангилаа ойр</li>
+                <li>• Олон төрлийн тээвэр</li>
+              </ul>
+              <div className="mt-2 text-xs text-orange-600">
+                Хэмнэгдэх цаг: <strong>30-60 мин/өдөр</strong>
+              </div>
+            </div>
+          </div>
+          
+          {/* Potential Savings Calculator */}
+          <div className="mt-4 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
+            <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+              <span className="mr-2">🎯</span>
+              Таны хэмнэж болох цаг
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-blue-600">
+                  {formatTime(Math.round(totalWeeklyMinutes * 0.3))}
+                </div>
+                <div className="text-sm text-gray-600">7 хоногт</div>
+                <div className="text-xs text-gray-500">30% хэмнэлт</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-green-600">
+                  {formatTime(Math.round(totalWeeklyMinutes * 4.33 * 0.3))}
+                </div>
+                <div className="text-sm text-gray-600">Сард</div>
+                <div className="text-xs text-gray-500">Дундаж хэмнэлт</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-purple-600">
+                  {((totalWeeklyMinutes * 4.33 * 12 * 0.3) / (24 * 60)).toFixed(1)} өдөр
+                </div>
+                <div className="text-sm text-gray-600">Жилд</div>
+                <div className="text-xs text-gray-500">Нийт хэмнэлт</div>
+              </div>
             </div>
           </div>
         </div>
